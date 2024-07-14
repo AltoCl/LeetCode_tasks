@@ -13,74 +13,50 @@
 # For example, "(H2O2)" and "(H2O2)3" are formulas.
 # Return the count of all elements as a string in the following form: the first name (in sorted order), followed by its count (if that count is more than 1), followed by the second name (in sorted order), followed by its count (if that count is more than 1), and so on.
 
+import collections
+
+
 class Solution:
     def countOfAtoms(self, formula: str) -> str:
-
-        tt = ""
-        arr = []
-        temp = ""
-        for i in range(0, len(formula)):
-            cu = formula[i]
-
-            if temp == "":
-                temp += cu
-                continue
-            if cu == "(" or cu == ")":
-                if temp != "":
-                    arr.append(temp)
-                arr.append(cu)
-                temp = ""
-                continue
-
-            if temp.isnumeric():
-                if cu.isnumeric():
-                    temp += cu
-                else:
-                    arr.append(temp)
-                    temp = cu
-            else:
-                if cu.isnumeric():
-                    arr.append(temp)
-                    temp = cu
-                else:
-                    if cu.isupper():
-                        arr.append(temp)
-                        temp = cu
-                    else:
-                        temp += cu
-        if temp != "":
-            arr.append(temp)
-
-        newarr = []
+        stack = [collections.defaultdict(int)]
         i = 0
-        while i < len(arr):
-            cu = arr[i]
-            if cu == "(":
-                newarr.append((cu, 0))
+        n = len(formula)
 
-            elif cu == ")":
+        while i < n:
+            if formula[i] == "(":
+                stack.append(collections.defaultdict(int))
+                i += 1
 
-                nexta = 1
-                if i + 1 < len(arr):
-                    temp = arr[i + 1]
-                    if temp.isnumeric():
-                        nexta = int(temp)
-                        i += 1
-                temparr = []
-                while len(newarr) > 0 and newarr[-1][0] != "(":
-                    f, c = newarr.pop()
-                    temparr.append((f, c * nexta))
-                newarr.pop()
-                for k in range(0, len(temparr)):
-                    newarr.append(temparr[k])
-            elif cu.isalpha():
-                nexta = 1
-                if i + 1 < len(arr):
-                    temp = arr[i + 1]
-                    if temp.isnumeric():
-                        nexta = int(temp)
-                        i += 1
-                newarr.append((cu, nexta))
-            i += 1
+            elif formula[i] == ")":
+                i += 1
+                start = i
+                while i < n and formula[i].isdigit():
+                    i += 1
+                multi = int(formula[start:i] or 1)
 
-        newarr.sort(key=lambda x: (x[0], x[1]))
+                dic = stack.pop()
+
+                for ele, val in dic.items():
+                    stack[-1][ele] += val * multi
+
+            else:
+                start = i
+                i += 1
+
+                while i < n and formula[i].islower():
+                    i += 1
+                elem = formula[start:i]
+                start = i
+
+                while i < n and formula[i].isdigit():
+                    i += 1
+                count = int(formula[start:i] or 1)
+
+                stack[-1][elem] += count
+
+        final_count = stack.pop()
+        result = ""
+        for elem in sorted(final_count.keys()):
+            result += elem + (str(final_count[elem]) if final_count[elem] > 1 else "")
+
+        return result
