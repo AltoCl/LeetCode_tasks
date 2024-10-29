@@ -42,3 +42,12 @@ class Solution:
                 # Check move from bottom-left cell (if valid)
                 if i + 1 < m and dp[i + 1] != -1 and grid[i][j] > grid[i + 1][j - 1]:
                     cur = max(cur, dp[i + 1] + 1)
+
+            # If we can't reach any cell in current column, break
+            if not found:
+                break
+            # Update result to current column if we can reach it
+            res = j
+
+        # Return the maximum number of moves possible
+        return res
