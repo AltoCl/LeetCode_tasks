@@ -39,3 +39,4 @@ class Solution:
             dropped = []
 
         return [scores.get(q, 0) for q in queries]
+
