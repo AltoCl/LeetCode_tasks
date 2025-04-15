@@ -6,46 +6,48 @@
 
 class Solution:
     def goodTriplets(self, nums1, nums2):
-        result = self.all_common_subsequences(nums1, nums2)
-        return len(self.extract_triplets(result))
+        n = len(nums1)
+        pos2 = {nums2[i]: i for i in range(n)}
 
-    def all_common_subsequences(self, nums1, nums2):
-        memo = {}
+        # Map nums1[i] to its position in nums2
+        mapped = [pos2[nums1[i]] for i in range(n)]
 
-        def dp(i, j):
-            key = f"{i}|{j}"
-            if key in memo:
-                return memo[key]
+        bitLeft = BIT(n)
+        bitRight = BIT(n)
+        rightCount = [0] * n
 
-            result = set()
+        # Count right side first
+        for i in range(n - 1, -1, -1):
+            rightCount[i] = bitRight.query(n - 1) - bitRight.query(mapped[i])
+            bitRight.update(mapped[i], 1)
 
-            if i >= len(nums1) or j >= len(nums2):
-                result.add(())
-            else:
-                if nums1[i] == nums2[j]:
-                    for subseq in dp(i + 1, j + 1):
-                        result.add((nums1[i],) + subseq)
+        result = 0
 
-                for subseq in dp(i + 1, j):
-                    result.add(subseq)
-                for subseq in dp(i, j + 1):
-                    result.add(subseq)
+        # Count left and calculate triplets
+        for i in range(n):
+            left = bitLeft.query(mapped[i] - 1)
+            right = rightCount[i]
+            result += left * right
+            bitLeft.update(mapped[i], 1)
 
-            memo[key] = result
-            return result
+        return result
 
-        all_subsequences = dp(0, 0)
-        return [list(seq) for seq in all_subsequences if len(seq) > 2]
 
-    def extract_triplets(self, subsequences):
-        triplets = set()
+class BIT:
+    def __init__(self, size):
+        self.size = size
+        self.tree = [0] * (size + 2)
 
-        for subseq in subsequences:
-            n = len(subseq)
-            for i in range(n - 2):
-                for j in range(i + 1, n - 1):
-                    for k in range(j + 1, n):
-                        triplet = (subseq[i], subseq[j], subseq[k])
-                        triplets.add(triplet)
+    def update(self, index, delta):
+        index += 1
+        while index <= self.size + 1:
+            self.tree[index] += delta
+            index += index & -index
 
-        return {list(triplet) for triplet in triplets}
+    def query(self, index):
+        result = 0
+        index += 1
+        while index > 0:
+            result += self.tree[index]
+            index -= index & -index
+        return result
